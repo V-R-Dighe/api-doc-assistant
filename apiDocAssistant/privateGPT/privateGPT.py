@@ -22,7 +22,7 @@ target_source_chunks = int(os.environ.get('TARGET_SOURCE_CHUNKS',4))
 
 from constants import CHROMA_SETTINGS
 
-def generate(query, mute_stream=False, hide_source=False):
+def generate(query,  hide_source=False):
     # Parse the command line arguments
     print("Target source chunks: "+ str(target_source_chunks))
 
@@ -31,23 +31,18 @@ def generate(query, mute_stream=False, hide_source=False):
     retriever = db.as_retriever(search_kwargs={"k": target_source_chunks})
     print("Retriever: "+ str(retriever))
     # activate/deactivate the streaming StdOut callback for LLMs
-    callbacks = [] if mute_stream else [MyCustomHandler()]
+    callbacks = [MyCustomHandler()]
     print("Callbacks: "+ str(callbacks))
     # Prepare the LLM
     match model_type:
         case "LlamaCpp":
             llm = LlamaCpp(model_path=model_path, max_tokens=model_n_ctx, n_batch=model_n_batch, callbacks=callbacks, verbose=False)
         case "GPT4All":
-            llm = GPT4All(model=model_path, max_tokens=model_n_ctx, backend='gptj', n_batch=model_n_batch, callbacks=callbacks, verbose=False)
+            llm = GPT4All(model=model_path, max_tokens=model_n_ctx, backend='gptj', n_batch=model_n_batch, callbacks=callbacks, verbose=True, streaming=True)
         case _default:
             # raise exception if model_type is not supported
             raise Exception(f"Model type {model_type} is not supported. Please choose one of the following: LlamaCpp, GPT4All")
-
     print("LLM: "+ str(llm))
-    print("Chain type: stuff")
-    print("Return source documents: "+ str(not hide_source))
-    print("Retriever: "+ str(retriever))
-    print("Query: "+ str(query))
     qa = RetrievalQA.from_chain_type(llm=llm, chain_type="stuff", retriever=retriever, return_source_documents= not hide_source)  
     print("QA: "+ str(qa))
     # Start the generation process
@@ -66,12 +61,7 @@ def generate(query, mute_stream=False, hide_source=False):
     return answer
 
 
-class MyCustomHandler(BaseCallbackHandler):
-    def on_llm_new_token(self, token: str, **kwargs) -> None:
-        print(f"My custom handler, token: {token}")
-
-
-def generate_data(query, mute_stream=False, hide_source=False):
+def generate_data(query, hide_source=False):
     embeddings = HuggingFaceEmbeddings(model_name=embeddings_model_name)
     db = Chroma(persist_directory=persist_directory, embedding_function=embeddings, client_settings=CHROMA_SETTINGS)
     retriever = db.as_retriever(search_kwargs={"k": target_source_chunks})
@@ -79,13 +69,13 @@ def generate_data(query, mute_stream=False, hide_source=False):
     # Create an instance of your custom handler
     custom_handler = MyCustomHandler()
     
-    callbacks = [] if mute_stream else [custom_handler]
+    callbacks = [custom_handler]
     
     match model_type:
         case "LlamaCpp":
             llm = LlamaCpp(model_path=model_path, max_tokens=model_n_ctx, n_batch=model_n_batch, callbacks=callbacks, verbose=False)
         case "GPT4All":
-            llm = GPT4All(model=model_path, max_tokens=model_n_ctx, backend='gptj', n_batch=model_n_batch, callbacks=callbacks, verbose=False)
+            llm = GPT4All(model=model_path, max_tokens=model_n_ctx, backend='gptj', n_batch=model_n_batch, callbacks=callbacks, verbose=True, streaming=True)
         case _default:
             raise Exception(f"Model type {model_type} is not supported. Please choose one of the following: LlamaCpp, GPT4All")
 
@@ -109,4 +99,6 @@ def generate_streamed_data(query, qa):
 
 class MyCustomHandler(BaseCallbackHandler):
     def on_llm_new_token(self, token: str, **kwargs) -> None:
-        yield f"My custom handler, token: {token}\n"
+        print(f"My custom handler, token: {token}")
+        # time.sleep(0.1)
+        yield f"{token}"

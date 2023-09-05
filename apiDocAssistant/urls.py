@@ -21,4 +21,6 @@ from apiDocAssistant import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/web/suggestions', views.get_suggestions, name='suggestions-api'),
+    path('api/web/upload', views.upload_file, name='upload-api'),
+    path('api/web/generate', views.get_suggestions_data, name='generate-api'),
 ]
