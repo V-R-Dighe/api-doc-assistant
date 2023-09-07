@@ -1,0 +1,33 @@
+sequenceDiagram
+    participant User
+    participant Script as Ingest Document Script 
+    participant Pool
+    participant TextSplitter
+    participant Embeddings
+    participant ChromaDB
+
+    User ->> Script: Execute Script (Python3 ingest.py)
+    Note over Script: Load Environment Variables
+    Note over Script: Define Constants
+    Note over Script: Define Custom Document Loaders
+    Note over Script: Start Main Process
+
+    Note over Script: Check Vectorstore Existence
+   
+    alt Vectorstore Exists
+        Note over Script: Append to Existing Vectorstore
+        Script ->> ChromaDB: Update Vectorstore
+        Script ->> Pool: Load Documents in Parallel
+        Pool ->> TextSplitter: Split Documents
+        Pool ->> Embeddings: Create Embeddings
+        Pool ->> ChromaDB: Add Documents and Embeddings
+    else Vectorstore Doesn't Exist
+        Note over Script: Create New Vectorstore
+        Script ->> Pool: Load Documents in Parallel
+        Pool ->> TextSplitter: Split Documents
+        Pool ->> Embeddings: Create Embeddings
+        Script ->> ChromaDB: Create New Vectorstore and Add Documents
+    end
+
+    Note over ChromaDB: Persist Vectorstore
+    Note over Script: Ingestion Complete

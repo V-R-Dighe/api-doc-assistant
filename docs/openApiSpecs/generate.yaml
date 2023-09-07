@@ -1,0 +1,37 @@
+openapi: 3.0.3
+info:
+  title: API Doc Assistant API Server
+  version: 1.0.0
+servers:
+  - url: http://127.0.0.1:8000/api/
+paths:
+  /web/generate:
+    get:
+      description: Generate answer based on the provided query and model type.
+      parameters:
+        - name: query
+          in: query
+          description: User's query
+          required: true
+          schema:
+            type: string
+            example: What is the http method for Adult Content Detection API?
+        - name: model_type
+          in: query
+          description: The type of model to use for generation (e.g., GPT4All, ChatOpenAI).
+          required: true
+          schema:
+            type: string
+            example: GPT4All
+      responses:
+        '200':
+          description: Information about the API.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Information about the HTTP method and body parameters.
+                    example: "Sample answer"
