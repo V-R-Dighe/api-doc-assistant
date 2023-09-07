@@ -1,0 +1,28 @@
+sequenceDiagram
+    participant ui as UI
+    participant api as API Server
+    participant embeddings as HuggingFace Embeddings
+    participant chroma as Chroma Vector DB
+    participant llm as LLM
+    participant rq as RetrievalQA
+    
+    ui->>api:  Send request 
+    note right of ui: Request: <br>GET {api_base_url}/web/generate<br><br>query params:  <br>query (User's question) [mandatory]<br>model_type (LLM model type)[mandatory]
+    api->>embeddings: Initialize HuggingFace Embeddings
+    embeddings-->>api: Initialized embeddings object
+
+    api->>chroma: Initialize Chroma Vector Store
+    embeddings-->>api: Initialized db object
+    note over api: Create retriever object using db
+
+    note over api: Choose model based on model_type
+    api->>llm: Initialize LLM (LlamaCpp/GPT4All/ChatOpenAI)
+    llm-->>api: Initialized llm model object
+    api->>rq: Initialize RetrievalQA with llm, chain_type="stuff", retriever, return_source_documents=True
+    rq-->>api: Initialized qa object
+
+    note over api: Generate answer for the given query using qa chain 
+    api->>rq: Generate answer
+    rq-->>api: Generated answer
+    api-->>ui: 200 response
+    note right of ui: Response body: <br> {<br>message: "Generated answer"<br>}
