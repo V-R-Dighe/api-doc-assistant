@@ -1,36 +1,21 @@
-from django.http import JsonResponse, StreamingHttpResponse
-import time
+from django.http import JsonResponse
 
-from .privateGPT.privateGPT import generate, generate_data
+from .privateGPT.privateGPT import generate
 from rest_framework.decorators import api_view
 
 from apiDocAssistant.helper import handle_uploaded_file  
 
 
 @api_view(['GET'])
-def get_suggestions(request):
+def get_suggestions_data(request):
     print("request: "+ request.GET.get('query'))
     query = request.GET.get('query')
+    model_type = request.GET.get('model_type')
     print("query: "+ query)
-    result = generate(query=query, hide_source=False)
-    print("result: "+ result)
-    return JsonResponse({"message": result})
-
-@api_view(['GET'])
-def get_suggestions_data(request):
-    query = request.GET.get('query')
-
-    def generate_stream():
-        yield f"Starting data generation for query: {query}\n"
-
-        # Generate data and stream it
-        for chunk in generate_data(query=query, hide_source=False):
-            print("chunk: "+ chunk)
-            yield chunk
-
-    response = StreamingHttpResponse(generate_stream(), content_type="text/plain")
-    response['Content-Disposition'] = f'attachment; filename="suggestions_data.txt"'
-    return response
+    print("model_type: "+ model_type)
+    answer, docs = generate(query=query, model_type=model_type)
+    print("answer: "+ answer)
+    return JsonResponse({"message": answer, "docs": docs })
 
 @api_view(['POST'])
 def upload_file(request):  
