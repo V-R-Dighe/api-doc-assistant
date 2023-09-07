@@ -13,9 +13,8 @@ def get_suggestions_data(request):
     model_type = request.GET.get('model_type')
     print("query: "+ query)
     print("model_type: "+ model_type)
-    answer, docs = generate(query=query, model_type=model_type)
-    print("answer: "+ answer)
-    return JsonResponse({"message": answer, "docs": docs })
+    answer = generate(query=query, model_type=model_type)
+    return JsonResponse({"message": answer })
 
 @api_view(['POST'])
 def upload_file(request):  

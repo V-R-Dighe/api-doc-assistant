@@ -62,4 +62,4 @@ def generate(query, hide_source=False, model_type="GPT4All"):
     print(query)
     print(f"\n> Answer (took {round(end - start, 2)} s.):")
     print(answer)
-    return answer, docs
+    return answer
