@@ -16,7 +16,6 @@ sequenceDiagram
    
     alt Vectorstore Exists
         Note over Script: Append to Existing Vectorstore
-        Script ->> ChromaDB: Update Vectorstore
         Script ->> Pool: Load Documents in Parallel
         Pool ->> TextSplitter: Split Documents
         Pool ->> Embeddings: Create Embeddings
